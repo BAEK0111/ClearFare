@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- 확장프로그램 설치 없이 브라우저로 열어서 배지 확인용. 규칙은 backend/rules.json에서 일부만 복사 -->
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../src/clearfare.css" />
+<script>
+  window.CLEARFARE_RULES = {
+    card_pct: 0.015,
+    default_baggage: 45000,
+    sellers: {
+      'Trip.com': { pct: 0.03, fixed: 0 },
+      Gotogate: { pct: 0, fixed: 15000 },
+      마이리얼트립: { pct: 0, fixed: 5000 },
+    },
+    airlines: { 제주항공: { baggage: 40000 }, 대한항공: { baggage: 0 } },
+  };
+  window.CLEARFARE_OPTS = { baggage: true };
+</script>
+<h3>검색 결과 (수하물 필요 기준)</h3>
+<div><img alt="제주항공" /> 07:00 - 09:30 <div><span>₩</span><span>200,000</span></div></div>
+<div><img alt="대한항공" /> 10:00 - 12:30 <div><span>₩300,000</span></div></div>
+<h3>판매처 목록</h3>
+<div><span>Gotogate</span> <div><span>₩195,000</span></div></div>
+<div><span>Trip.com</span> <div><span>₩200,000</span></div></div>
+<div><span>마이리얼트립</span> <div><span>₩203,000</span></div></div>
+<script src="../src/core.js"></script>
+<script src="../src/content.js"></script>

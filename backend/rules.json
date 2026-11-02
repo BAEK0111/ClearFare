@@ -1,0 +1,25 @@
+{
+  "_note": "수수료·수하물 숫자는 모두 예시 데이터(verified: false). 실제 결제 페이지에서 확인 후 수정하고 verified를 true로 바꿀 것.",
+  "card_pct": 0.015,
+  "default_baggage": 45000,
+  "sellers": {
+    "Trip.com": { "pct": 0.03, "fixed": 0, "verified": false },
+    "마이리얼트립": { "pct": 0, "fixed": 5000, "verified": false },
+    "Kiwi.com": { "pct": 0.05, "fixed": 0, "verified": false },
+    "Gotogate": { "pct": 0, "fixed": 15000, "verified": false },
+    "Mytrip": { "pct": 0, "fixed": 15000, "verified": false },
+    "인터파크": { "pct": 0, "fixed": 3000, "verified": false },
+    "하나투어": { "pct": 0, "fixed": 3000, "verified": false }
+  },
+  "airlines": {
+    "대한항공": { "baggage": 0, "verified": false },
+    "아시아나": { "baggage": 0, "verified": false },
+    "제주항공": { "baggage": 40000, "verified": false },
+    "진에어": { "baggage": 40000, "verified": false },
+    "티웨이": { "baggage": 40000, "verified": false },
+    "에어부산": { "baggage": 40000, "verified": false },
+    "에어서울": { "baggage": 40000, "verified": false },
+    "이스타항공": { "baggage": 40000, "verified": false },
+    "Peach": { "baggage": 50000, "verified": false }
+  }
+}
