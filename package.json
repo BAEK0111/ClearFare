@@ -1,0 +1,5 @@
+{
+  "name": "clearfare",
+  "private": true,
+  "scripts": { "test": "node --test" }
+}
