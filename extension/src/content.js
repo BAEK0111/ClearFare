@@ -78,16 +78,19 @@ function rank() {
     const mark = b.dataset.verified === 'true' ? '' : ' · 아직 확인 못 한 수수료라 예시 기준이에요. 실제로 결제했다면 팝업에서 알려 주세요!';
     b.textContent = won(b.dataset.total);
     b.title = `결제할 금액은 이 정도예요${totalLabel()} · 처음 본 금액 ${shown[i]}위 → 결제할 금액 ${final[i]}위${mark}`;
-    b.classList.toggle('clearfare-worse', final[i] > shown[i]);
   });
   renderPanel(badges.map((b) => b.dataset));
 }
 
 function renderPanel(rows) {
-  document.querySelector('.clearfare-panel')?.remove();
+  // 페이지가 바뀔 때마다 다시 그리니까, 사용자가 접어 둔 상태는 유지
+  const prev = document.querySelector('.clearfare-panel');
+  const open = prev ? prev.open : true;
+  prev?.remove();
   if (rows.length < 2) return;
-  const panel = document.createElement('div');
+  const panel = document.createElement('details');
   panel.className = 'clearfare clearfare-panel';
+  panel.open = open;
   const table = document.createElement('table');
   const line = (cells, tag = 'td') => {
     const tr = table.insertRow();
@@ -104,14 +107,11 @@ function renderPanel(rows) {
   const medal = table.rows[1].cells[0].appendChild(document.createElement('span'));
   medal.className = 'clearfare-best';
   medal.textContent = '고객만족 1위 🥇';
-  const title = document.createElement('b');
+  const title = document.createElement('summary');
   title.textContent = '진짜 결제 금액, 싼 순서로 줄 세웠어요' + totalLabel();
-  const close = document.createElement('button');
-  close.textContent = '×';
-  close.onclick = () => panel.remove();
   const note = document.createElement('small');
   note.textContent = '* 수수료를 아직 확인 못 한 곳이에요. 예시 기준으로 계산했어요';
-  panel.append(close, title, table, note);
+  panel.append(title, table, note);
   document.body.append(panel);
 }
 

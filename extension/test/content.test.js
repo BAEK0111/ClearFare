@@ -36,7 +36,6 @@ test('판매처 화면: 순위 역전 표시와 최종가 순 비교표', async 
   assert.deepStrictEqual(badges(w), ['₩215,000', '₩200,000', '₩210,000']);
   assert.deepStrictEqual(titles(w).map((t) => t.match(/처음 본 금액 \d위 → 결제할 금액 \d위/)[0]), ['처음 본 금액 1위 → 결제할 금액 3위', '처음 본 금액 2위 → 결제할 금액 1위', '처음 본 금액 3위 → 결제할 금액 2위']);
   assert.deepStrictEqual(titles(w).map((t) => t.includes('아직 확인 못 한')), [true, true, false]);
-  assert.ok(w.document.querySelectorAll('.clearfare-badge')[0].classList.contains('clearfare-worse'));
   const cells = [...w.document.querySelectorAll('.clearfare-panel td:first-child')].map((td) => td.firstChild.textContent);
   assert.deepStrictEqual(cells, ['Trip.com*', '진에어', 'Gotogate*']);
   assert.strictEqual(w.document.querySelector('.clearfare-panel .clearfare-best').closest('td').firstChild.textContent, 'Trip.com*');
@@ -93,4 +92,16 @@ test('여러 명 검색: 카드에 총액만 있으면 인원수로 나눠 계�
   const card = (airline, total) => `<div class="card"><div><img alt="${airline}"></div><div><div><span>총</span> <span>₩${total}</span></div><button>선택</button></div></div>`;
   const w = run(card('제주항공', '400,000') + card('대한항공', '600,000'), 'https://www.skyscanner.co.kr/transport/flights/icn/nrt/?adultsv2=2');
   assert.deepStrictEqual(badges(w), ['₩400,000 ~ ₩440,000', '₩600,000 ~ ₩640,000']);
+});
+
+test('비교표: 접으면 다시 그려도 접힌 상태 유지', async () => {
+  const row = (seller, price) => `<div class="row"><span>${seller}</span><div><span>₩${price}</span></div><a>선택</a></div>`;
+  const w = run(row('Gotogate', '195,000') + row('Trip.com', '200,000'), 'https://www.skyscanner.co.kr/transport/flights/icn/nrt/261201/config/123');
+  const panel = () => w.document.querySelector('.clearfare-panel');
+  assert.strictEqual(panel().open, true);
+  panel().open = false;
+  w.document.body.insertAdjacentHTML('beforeend', row('인터파크', '190,000'));
+  await wait(400);
+  assert.strictEqual(panel().querySelectorAll('tr').length, 4);
+  assert.strictEqual(panel().open, false);
 });
