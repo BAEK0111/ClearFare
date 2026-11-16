@@ -38,7 +38,7 @@ def load_rules(db):
         markups[seller].append(final / (1 + rules["card_pct"] * card) / displayed - 1)
     for seller, ms in markups.items():
         if len(ms) >= MIN_SAMPLES:
-            rules["sellers"][seller] = {"pct": round(statistics.median(ms), 4), "fixed": 0, "verified": True, "samples": len(ms)}
+            rules["sellers"][seller] = {**rules["sellers"].get(seller, {}), "pct": round(statistics.median(ms), 4), "fixed": 0, "verified": True, "samples": len(ms)}
     return rules
 
 

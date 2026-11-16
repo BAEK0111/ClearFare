@@ -5,17 +5,20 @@
 <script>
   window.CLEARFARE_RULES = {
     card_pct: 0.015,
-    default_baggage: 45000,
+    default_seat: 15000,
     sellers: {
-      'Trip.com': { pct: 0.03, fixed: 0 },
+      'Trip.com': { pct: 0.03, fixed: 0, discount_pct: 0.05 },
       Gotogate: { pct: 0, fixed: 15000 },
       마이리얼트립: { pct: 0, fixed: 5000 },
     },
-    airlines: { 제주항공: { baggage: 40000 }, 대한항공: { baggage: 0 } },
+    airlines: {
+      제주항공: { seat: 15000, bag: { type: 'kg', free_kg: 0, first_kg: 15, first: { japan: 40000 }, step_kg: 5, step: { japan: 40000 } } },
+      대한항공: { seat: 0, bag: { type: 'piece', bag_kg: 23, free_bags: 1, extra: { japan: [70000, 100000] } } },
+    },
   };
-  window.CLEARFARE_OPTS = { baggage: true };
+  window.CLEARFARE_OPTS = { bag_out: 15 };
 </script>
-<h3>검색 결과 (수하물 필요 기준)</h3>
+<h3>검색 결과 — 왼쪽 아래 예매 조건을 바꿔 보세요</h3>
 <div><img alt="제주항공" /> 07:00 - 09:30 <div><span>₩</span><span>200,000</span></div></div>
 <div><img alt="대한항공" /> 10:00 - 12:30 <div><span>₩300,000</span></div></div>
 <h3>판매처 목록</h3>
@@ -23,4 +26,5 @@
 <div><span>Trip.com</span> <div><span>₩200,000</span></div></div>
 <div><span>마이리얼트립</span> <div><span>₩203,000</span></div></div>
 <script src="../src/core.js"></script>
+<script src="../src/filters.js"></script>
 <script src="../src/content.js"></script>

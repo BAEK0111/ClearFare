@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ClearFare",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "항공권 표시가에 판매처 수수료·수하물·카드 수수료를 더한 최종 결제 예상 금액을 보여줍니다.",
   "permissions": ["storage"],
   "host_permissions": ["http://127.0.0.1:8000/*"],
@@ -10,7 +10,7 @@
   "content_scripts": [
     {
       "matches": ["https://www.skyscanner.co.kr/*", "https://www.skyscanner.net/*"],
-      "js": ["src/core.js", "src/content.js"],
+      "js": ["src/core.js", "src/filters.js", "src/content.js"],
       "css": ["src/clearfare.css"]
     }
   ]

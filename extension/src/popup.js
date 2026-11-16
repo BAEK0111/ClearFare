@@ -1,12 +1,9 @@
 const $ = (id) => document.getElementById(id);
-const defaults = { baggage: false, card: false };
-
-// 내 조건 → chrome.storage.sync → content.js가 onChanged로 받아 다시 계산
-chrome.storage.sync.get(defaults).then((saved) => {
-  for (const key in defaults) {
-    $(key).checked = $('r-' + key).checked = saved[key];
-    $(key).onchange = () => chrome.storage.sync.set({ [key]: $(key).checked });
-  }
+// 예매 조건 → chrome.storage.sync → content.js가 onChanged로 받아 다시 계산 (페이지 필터와 같은 값)
+chrome.storage.sync.get(FILTER_DEFAULTS).then((saved) => {
+  $('filters').append(buildFilters(document, saved, (next) => chrome.storage.sync.set(next)));
+  $('r-baggage').checked = saved.bag_out > 0 || saved.bag_back > 0 || saved.seat;
+  $('r-card').checked = saved.card;
 });
 
 chrome.runtime.sendMessage({ type: 'rules', fresh: true }).then(({ rules, online }) => {

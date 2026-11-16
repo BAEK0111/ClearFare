@@ -1,29 +1,51 @@
 <!doctype html>
 <meta charset="utf-8" />
+<link rel="stylesheet" href="clearfare.css" />
 <style>
-  body { width: 260px; font: 13px system-ui, sans-serif; margin: 12px; }
-  h1 { font-size: 15px; margin: 0 0 8px; }
-  h2 { font-size: 13px; margin: 14px 0 6px; }
-  label { display: block; margin: 6px 0; }
-  input[type='number'], input[type='text'] { width: 100%; box-sizing: border-box; padding: 4px; }
-  #status, #msg { color: #555; }
-  button { margin-top: 8px; width: 100%; padding: 6px; }
+  body { width: 320px; margin: 0; background: var(--cf-grey100); color: var(--cf-grey900); font-size: 14px; }
+  header { padding: 20px 20px 12px; }
+  h1 { margin: 0; font-size: 22px; font-weight: 700; }
+  #status { margin-top: 4px; color: var(--cf-grey500); font-size: 13px; }
+  section { margin: 0 12px 12px; padding: 18px 20px; border-radius: 20px; background: #fff; }
+  h2 { margin: 0 0 8px; font-size: 17px; font-weight: 700; }
+  #report label { display: block; margin: 12px 0 0; color: var(--cf-grey700); font-size: 13px; font-weight: 500; }
+  #report label.check { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; color: var(--cf-grey900); font-size: 15px; }
+  #report input[type='number'], #report input[type='text'] {
+    display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 12px 14px;
+    border: 0; border-radius: 12px; background: var(--cf-grey100); color: var(--cf-grey900); font: inherit; font-size: 15px;
+  }
+  #report input::placeholder { color: var(--cf-grey500); }
+  button {
+    width: 100%; margin-top: 16px; padding: 14px; border: 0; border-radius: 14px;
+    background: var(--cf-main-strong); color: var(--cf-grey900); font: inherit; font-size: 16px; font-weight: 600; cursor: pointer;
+  }
+  button:hover { background: var(--cf-main-strong-dark); }
+  #msg { margin-top: 10px; color: var(--cf-grey700); font-size: 13px; text-align: center; }
+  #msg:empty { display: none; }
 </style>
-<h1>ClearFare</h1>
-<div id="status">서버 확인 중…</div>
+<body class="clearfare-popup">
+<header>
+  <h1>ClearFare</h1>
+  <div id="status">서버 확인 중…</div>
+</header>
 
-<h2>내 조건</h2>
-<label><input type="checkbox" id="baggage" /> 위탁수하물 필요</label>
-<label><input type="checkbox" id="card" /> 카드로 결제</label>
+<section>
+  <h2>예매 조건</h2>
+  <div id="filters"></div>
+</section>
 
-<h2>실제 결제 금액 신고</h2>
-<form id="report">
-  <label>판매처 <input type="text" id="seller" required maxlength="50" /></label>
-  <label>스카이스캐너 표시가(원) <input type="number" id="displayed" required min="1" /></label>
-  <label>실제 결제 금액(원) <input type="number" id="final" required min="1" /></label>
-  <label><input type="checkbox" id="r-baggage" /> 수하물 추가해서 결제함</label>
-  <label><input type="checkbox" id="r-card" /> 카드로 결제함</label>
-  <button>신고하기</button>
-  <div id="msg"></div>
-</form>
+<section>
+  <h2>실제 결제 금액 신고</h2>
+  <form id="report">
+    <label>판매처 <input type="text" id="seller" required maxlength="50" placeholder="예: Trip.com" /></label>
+    <label>스카이스캐너에서 처음 본 금액(원) <input type="number" id="displayed" required min="1" placeholder="200000" /></label>
+    <label>실제 결제 금액(원) <input type="number" id="final" required min="1" placeholder="215000" /></label>
+    <label class="check"><span>수하물·좌석 추가해서 결제함</span><input type="checkbox" id="r-baggage" /></label>
+    <label class="check"><span>카드로 결제함</span><input type="checkbox" id="r-card" /></label>
+    <button>신고하기</button>
+    <div id="msg"></div>
+  </form>
+</section>
+<script src="filters.js"></script>
 <script src="popup.js"></script>
+</body>

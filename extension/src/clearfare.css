@@ -1,32 +1,208 @@
+/* 토스 스타일: 흰 카드 + 큰 라운드 + 회색 위계 + 메인 컬러 강조. 스카이스캐너 스타일과 안 섞이게 .clearfare 아래로만 적용 */
+.clearfare,
+.clearfare-popup {
+  --cf-main: #fff3cd; /* 아이보리. 위에 올리는 글씨는 --cf-main-ink(검정) */
+  --cf-main-ink: #191f28;
+  --cf-main-line: #f0d68a;
+  --cf-main-strong: #e9c46a; /* 스위치·버튼처럼 꽉 찬 요소 */
+  --cf-main-strong-dark: #dcb04a;
+  --cf-grey900: #191f28;
+  --cf-grey700: #4e5968;
+  --cf-grey500: #8b95a1;
+  --cf-grey200: #e5e8eb;
+  --cf-grey100: #f2f4f6;
+  font-family: 'Toss Product Sans', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+  box-sizing: border-box;
+}
+
+/* 가격 옆 배지: 숫자만, 자세한 설명은 title 툴팁 */
 .clearfare-badge {
   display: inline-block;
   margin-left: 6px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: #fff3cd;
-  color: #7a4b00;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--cf-main);
+  color: var(--cf-main-ink);
+  box-shadow: inset 0 0 0 1px var(--cf-main-line);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  vertical-align: middle;
 }
 .clearfare-worse {
-  background: #fde2e1;
-  color: #8a1c14;
+  background: var(--cf-grey900);
+  color: var(--cf-main);
+  box-shadow: none;
 }
-.clearfare-panel {
+
+/* 떠 있는 카드 공통 */
+.clearfare-panel,
+.clearfare-filters {
   position: fixed;
-  right: 16px;
-  bottom: 16px;
+  bottom: 20px;
   z-index: 2147483647;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 20px;
+  border-radius: 20px;
   background: #fff;
-  color: #111;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  font: 13px system-ui, sans-serif;
+  color: var(--cf-grey900);
+  box-shadow: 0 8px 32px rgba(0, 23, 51, 0.12), 0 0 1px rgba(0, 23, 51, 0.16);
+  font-size: 14px;
+  line-height: 1.5;
 }
-.clearfare-panel table { border-collapse: collapse; margin: 6px 0; }
-.clearfare-panel th, .clearfare-panel td { padding: 3px 8px; text-align: right; }
+
+/* 판매처 비교표 */
+.clearfare-panel { right: 20px; min-width: 420px; }
+.clearfare-panel b { display: block; margin-bottom: 12px; font-size: 17px; font-weight: 700; }
+.clearfare-panel table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.clearfare-panel th {
+  max-width: 96px;
+  padding: 0 6px 8px;
+  vertical-align: bottom;
+  color: var(--cf-grey500);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: right;
+}
+.clearfare-panel td { padding: 10px 6px; border-top: 1px solid var(--cf-grey100); color: var(--cf-grey700); text-align: right; }
 .clearfare-panel th:first-child, .clearfare-panel td:first-child { text-align: left; }
-.clearfare-panel tr:nth-child(2) td { font-weight: 700; color: #0a6b2f; }
-.clearfare-panel button { float: right; border: 0; background: none; font-size: 16px; cursor: pointer; }
-.clearfare-panel small { color: #777; }
+.clearfare-panel td:first-child { color: var(--cf-grey900); font-weight: 600; }
+.clearfare-panel td:last-child { color: var(--cf-grey500); }
+/* 1등(결제할 금액이 가장 싼 곳): 파랑/빨강 대신 아이보리 줄 + "가장 저렴" 표시. 주식창처럼 오르내림으로 읽히지 않게 */
+.clearfare-panel tr:nth-child(2) td { background: var(--cf-main); color: var(--cf-main-ink); font-weight: 700; }
+.clearfare-panel tr:nth-child(2) td:first-child { border-radius: 10px 0 0 10px; }
+.clearfare-panel tr:nth-child(2) td:last-child { border-radius: 0 10px 10px 0; }
+.clearfare-panel tr:nth-child(2) td, .clearfare-panel tr:nth-child(3) td { border-top: 0; }
+.clearfare-best {
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--cf-main-ink);
+  color: var(--cf-main);
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: 1px;
+}
+.clearfare-panel button {
+  float: right;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--cf-grey100);
+  color: var(--cf-grey500);
+  font-size: 16px;
+  line-height: 28px;
+  cursor: pointer;
+}
+.clearfare-panel button:hover { background: var(--cf-grey200); }
+.clearfare-panel small { display: block; margin-top: 10px; color: var(--cf-grey500); font-size: 12px; }
+
+/* 예매 조건 필터 */
+.clearfare-filters { left: 20px; width: 300px; padding: 16px 20px; }
+.clearfare-filters summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.clearfare-filters summary::-webkit-details-marker { display: none; }
+.clearfare-filters summary::after { content: '⌄'; color: var(--cf-grey500); transition: transform 0.2s; }
+.clearfare-filters[open] summary::after { transform: rotate(180deg); }
+.clearfare-filters[open] summary { margin-bottom: 4px; }
+
+.clearfare-filter-form label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 0;
+  color: var(--cf-grey900);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.clearfare-filter-form small { display: block; margin-top: 2px; color: var(--cf-grey500); font-size: 12px; font-weight: 400; }
+.clearfare-filter-form select {
+  margin: 0;
+  padding: 6px 28px 6px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--cf-grey100) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238b95a1' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 10px center;
+  color: var(--cf-grey900);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  appearance: none;
+  cursor: pointer;
+}
+
+/* 무게 입력: 숫자 + 단위 */
+.clearfare-unit {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--cf-grey100);
+  color: var(--cf-grey500);
+  font-size: 14px;
+  font-weight: 600;
+}
+.clearfare-unit input {
+  width: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cf-grey900);
+  font: inherit;
+  text-align: right;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.clearfare-unit input::-webkit-inner-spin-button,
+.clearfare-unit input::-webkit-outer-spin-button { margin: 0; -webkit-appearance: none; }
+.clearfare-unit:focus-within { box-shadow: 0 0 0 2px var(--cf-main-strong); }
+.clearfare-unit input:focus-visible { outline: none; }
+
+/* 체크박스 → 토스 스위치 */
+.clearfare-filter-form input[type='checkbox'],
+.clearfare-popup input[type='checkbox'] {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 26px;
+  margin: 0;
+  border-radius: 13px;
+  background: var(--cf-grey200);
+  appearance: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.clearfare-filter-form input[type='checkbox']::after,
+.clearfare-popup input[type='checkbox']::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+.clearfare-filter-form input[type='checkbox']:checked,
+.clearfare-popup input[type='checkbox']:checked { background: var(--cf-main-strong); }
+.clearfare-filter-form input[type='checkbox']:checked::after,
+.clearfare-popup input[type='checkbox']:checked::after { transform: translateX(18px); }
+.clearfare-filter-form :focus-visible,
+.clearfare-popup :focus-visible { outline: 2px solid var(--cf-main-ink); outline-offset: 2px; }

@@ -32,6 +32,9 @@ async function postReport(report) {
   }
 }
 
+// 업데이트하면 예전 형식의 캐시 규칙을 버리고 서버에서 새로 받는다
+chrome.runtime.onInstalled.addListener(() => chrome.storage.local.remove('rulesAt'));
+
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   const job = msg.type === 'rules' ? getRules(msg.fresh) : msg.type === 'report' ? postReport(msg.report) : null;
   if (!job) return false;
