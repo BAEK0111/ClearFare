@@ -1,6 +1,8 @@
 // 가격 파싱·최종가 계산·가격 요소 탐색. content.js와 테스트(node)가 같이 쓴다.
 const PRICE_ONLY = /^(?:₩\s*[\d,]+|[\d,]+\s*원)$/;
-const DIRECT = { pct: 0, fixed: 0, card_pct: 0, verified: true }; // 국내 항공사 공식 사이트 직접 예약: 원화 결제라 카드 수수료 없음
+// 항공사 공식 사이트 직접 예약. 국내 항공사는 원화 결제라 수수료 없음, 해외 항공사는 규칙의 direct(예: 젯스타 예약 수수료)로 덮어씀
+const DIRECT = { pct: 0, fixed: 0, card_pct: 0, verified: true };
+const directOf = (air) => ({ ...DIRECT, ...air?.direct });
 
 function parsePrice(text) {
   const m = /₩\s*([\d,]+)|([\d,]+)\s*원/.exec(text);
@@ -15,12 +17,16 @@ function findName(text, map) {
   return name ? [name, map[name]] : null;
 }
 
+// 판매처 규칙의 pct·fixed·card_pct는 숫자 또는 [최소, 최대] (조사한 수수료 폭). end: LOW면 최소, HIGH면 최대 값
+const LOW = (v) => (Array.isArray(v) ? v[0] : v);
+const HIGH = (v) => (Array.isArray(v) ? v[1] : v);
+
 // 1인 기준. extras: 수하물·좌석 등 추가 옵션 요금, discount: 판매처 할인율(discount_pct) 적용 여부
 // cardPct: 카드 결제를 켰을 때의 기본 카드 수수료율. 판매처에 card_pct가 있으면 그걸 쓴다 (국내 여행사 0, 해외 판매처는 해외결제 수수료)
-function finalPrice(price, seller, { extras = 0, cardPct = 0, discount = false } = {}) {
-  const pct = seller.pct - (discount ? seller.discount_pct ?? 0 : 0);
-  const card = cardPct ? seller.card_pct ?? cardPct : 0;
-  return Math.round((price * (1 + pct) + seller.fixed + extras) * (1 + card));
+function finalPrice(price, seller, { extras = 0, cardPct = 0, discount = false } = {}, end = LOW) {
+  const pct = end(seller.pct) - (discount ? seller.discount_pct ?? 0 : 0);
+  const card = cardPct ? end(seller.card_pct ?? cardPct) : 0;
+  return Math.round((price * (1 + pct) + end(seller.fixed) + extras) * (1 + card));
 }
 
 // 서버 규칙에 수하물 요금이 없을 때(예전 캐시 등) 쓰는 기본값: 일반적인 국내 LCC 사전 구매 요금
@@ -97,11 +103,15 @@ function estimate(price, ctx, rules, opts, page = {}) {
     discount: !!opts.discount,
   };
   const n = opts.passengers || 1; // 항상 인원 총액으로 보여 준다 (1인 가격 × 인원은 사람이 계산하기 번거로움)
-  const seller = findName(ctx, rules.sellers) ?? (page.sellerPage && ctxAirline ? [ctxAirline[0], DIRECT] : null);
+  // 항상 제일 싼 경우 ~ 제일 비싼 경우. 판매처 선택 화면은 그 판매처의 수수료 폭, 검색 결과 목록은 어디서 살지 모르니 판매처 전체
+  // (검색 결과 목록은 카드에 판매처 이름이 보여도 판매처 전체 기준)
+  const seller = page.sellerPage ? findName(ctx, rules.sellers) ?? (ctxAirline ? [ctxAirline[0], directOf(ctxAirline[1])] : null) : null;
   if (seller) {
-    return { kind: 'seller', seller: seller[0], verified: !!seller[1].verified, shown: price * n, total: finalPrice(price, seller[1], calc) * n };
+    const [min, max] = [LOW, HIGH].map((end) => finalPrice(price, seller[1], calc, end) * n);
+    return { kind: 'seller', seller: seller[0], verified: !!seller[1].verified, shown: price * n, min, max };
   }
-  const totals = [DIRECT, ...Object.values(rules.sellers)].map((s) => finalPrice(price, s, calc) * n);
+  const sellers = [directOf(air), ...Object.values(rules.sellers)];
+  const totals = [...sellers.map((s) => finalPrice(price, s, calc, LOW) * n), ...sellers.map((s) => finalPrice(price, s, calc, HIGH) * n)];
   return { kind: 'range', min: Math.min(...totals), max: Math.max(...totals), airline: airline?.[0] ?? null };
 }
 
@@ -144,4 +154,4 @@ function textOf(el) {
   return el.textContent + ' ' + [...el.querySelectorAll('img[alt]')].map((i) => i.alt).join(' ');
 }
 
-if (typeof module !== 'undefined') module.exports = { parsePrice, findName, finalPrice, regionOf, passengersOf, baggageFee, estimate, ranks, findPriceElements, contextOf, textOf };
+if (typeof module !== 'undefined') module.exports = { LOW, HIGH, parsePrice, findName, finalPrice, regionOf, passengersOf, baggageFee, estimate, ranks, findPriceElements, contextOf, textOf };

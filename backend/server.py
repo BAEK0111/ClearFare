@@ -7,7 +7,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 HERE = Path(__file__).parent
-RULES_PATH = HERE / "rules.json"
+RULES_PATH = HERE.parent / "extension" / "rules.json"  # 확장프로그램에 같이 들어가는 기본 규칙과 같은 파일
 DB_PATH = HERE / "clearfare.db"
 MIN_SAMPLES = 3  # 판매처당 신고가 이만큼 쌓이면 수수료율을 실측값으로 교체
 MAX_BODY = 10_000
@@ -36,6 +36,8 @@ def load_rules(db):
     markups = defaultdict(list)
     for seller, displayed, final, card in db.execute("select seller, displayed, final, card from reports where baggage = 0"):
         card_pct = rules["sellers"].get(seller, {}).get("card_pct", rules["card_pct"])
+        if isinstance(card_pct, list):  # [최소, 최대] 범위면 중간값
+            card_pct = sum(card_pct) / 2
         markups[seller].append(final / (1 + card_pct * card) / displayed - 1)
     for seller, ms in markups.items():
         if len(ms) >= MIN_SAMPLES:

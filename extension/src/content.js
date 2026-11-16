@@ -3,6 +3,7 @@ let rules = null;
 let opts = { ...FILTER_DEFAULTS };
 const isExtension = !!globalThis.chrome?.runtime?.id;
 const won = (n) => '₩' + Number(n).toLocaleString('ko-KR');
+const wonRange = (min, max, sign = '') => (+min === +max ? sign + won(min) : `${sign}${won(min)} ~ ${sign}${won(max)}`);
 // 판매처 선택 화면 URL에는 /config/(예전) 또는 /itinerary/(지금)가 들어간다
 const isSellerPage = () => /\/(config|itinerary)\//.test(location.pathname);
 // 스카이스캐너 가격은 1인 기준인데, 여러 명이면 "총 ₩…"(인원 총액)도 같이 나온다.
@@ -36,10 +37,10 @@ function annotate(el, page, total) {
   const badge = document.createElement('span');
   badge.className = 'clearfare clearfare-badge';
   if (est.kind === 'seller') {
-    Object.assign(badge.dataset, { seller: est.seller, price: est.shown, total: est.total, verified: est.verified });
+    Object.assign(badge.dataset, { seller: est.seller, price: est.shown, min: est.min, max: est.max, verified: est.verified });
     ctx.dataset.cfRow = JSON.stringify({ seller: est.seller, price: est.shown }); // 클릭하면 팝업 신고 양식에 미리 채움. 실결제도 총액이라 인원 총액으로
   } else {
-    badge.textContent = est.min === est.max ? won(est.min) : `${won(est.min)} ~ ${won(est.max)}`;
+    badge.textContent = wonRange(est.min, est.max);
     badge.title = `결제할 금액은 이 정도예요${totalLabel()} · 판매처마다 수수료가 달라서 범위로 알려 드려요 · 조건: ${conditionText(est.airline)}`;
   }
   el.after(badge);
@@ -69,14 +70,14 @@ function scan() {
   els.forEach((el, i) => el.dataset.cfSkip === undefined && annotate(el, page, totals[i]));
 }
 
-// 판매처끼리 처음 본 금액 순위와 결제할 금액 순위를 비교하고, 결제할 금액 순 비교표를 띄운다
+// 판매처끼리 처음 본 금액 순위와 결제할 금액 순위를 비교하고, 결제할 금액 순 비교표를 띄운다. 순위는 제일 싼 경우(최소) 기준
 function rank() {
-  const badges = [...document.querySelectorAll('.clearfare-badge[data-total]')];
+  const badges = [...document.querySelectorAll('.clearfare-badge[data-min]')];
   const shown = ranks(badges.map((b) => +b.dataset.price));
-  const final = ranks(badges.map((b) => +b.dataset.total));
+  const final = ranks(badges.map((b) => +b.dataset.min));
   badges.forEach((b, i) => {
-    const mark = b.dataset.verified === 'true' ? '' : ' · 아직 확인 못 한 수수료라 예시 기준이에요. 실제로 결제했다면 팝업에서 알려 주세요!';
-    b.textContent = won(b.dataset.total);
+    const mark = b.dataset.verified === 'true' ? '' : ' · 아직 실제 결제로 확인 못 한 수수료라 조사한 값 기준이에요. 실제로 결제했다면 팝업에서 알려 주세요!';
+    b.textContent = wonRange(b.dataset.min, b.dataset.max);
     b.title = `결제할 금액은 이 정도예요${totalLabel()} · 처음 본 금액 ${shown[i]}위 → 결제할 금액 ${final[i]}위${mark}`;
   });
   renderPanel(badges.map((b) => b.dataset));
@@ -99,8 +100,8 @@ function renderPanel(rows) {
   };
   line(['판매처', '처음 본 금액', '결제할 금액', 'ClearFare가 찾아낸 금액'], 'th');
   [...rows]
-    .sort((a, b) => a.total - b.total)
-    .forEach((r) => line([r.seller + (r.verified === 'true' ? '' : '*'), won(r.price), won(r.total), r.total > r.price ? '+' + won(r.total - r.price) : '숨은 돈 없어요']));
+    .sort((a, b) => a.min - b.min || a.max - b.max)
+    .forEach((r) => line([r.seller + (r.verified === 'true' ? '' : '*'), won(r.price), wonRange(r.min, r.max), +r.max > +r.price ? wonRange(r.min - r.price, r.max - r.price, '+') : '숨은 돈 없어요']));
   const best = table.rows[1].cells[0].appendChild(document.createElement('span'));
   best.className = 'clearfare-best';
   best.textContent = '제일 싸요';
@@ -110,7 +111,7 @@ function renderPanel(rows) {
   const title = document.createElement('summary');
   title.textContent = '진짜 결제 금액, 싼 순서로 줄 세웠어요' + totalLabel();
   const note = document.createElement('small');
-  note.textContent = '* 수수료를 아직 확인 못 한 곳이에요. 예시 기준으로 계산했어요';
+  note.textContent = '* 수수료를 아직 실제 결제로 확인 못 한 곳이에요. 조사한 값으로 계산했어요';
   panel.append(title, table, note);
   document.body.append(panel);
 }
@@ -178,7 +179,7 @@ if (isExtension) {
   Promise.all([chrome.storage.sync.get(FILTER_DEFAULTS), chrome.runtime.sendMessage({ type: 'rules' })]).then(([saved, res]) => {
     opts = saved;
     rules = res?.rules ?? null;
-    if (!rules) console.warn('[ClearFare] 서버에서 규칙을 못 받음 — backend/server.py 실행 확인');
+    if (!rules) console.warn('[ClearFare] 규칙을 못 불러옴');
     mountFilters();
     refresh();
   });

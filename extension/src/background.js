@@ -12,7 +12,8 @@ async function getRules(fresh) {
     await chrome.storage.local.set({ rules: latest, rulesAt: Date.now() });
     return { rules: latest, online: true };
   } catch {
-    return { rules: rules ?? null, online: false }; // 서버가 꺼져 있으면 마지막으로 받은 규칙 사용
+    // 서버가 꺼져 있으면 마지막으로 받은 규칙, 그것도 없으면 확장프로그램에 들어 있는 기본 규칙 (서버 없이도 바로 쓰게)
+    return { rules: rules ?? (await (await fetch(chrome.runtime.getURL('rules.json'))).json()), online: false };
   }
 }
 
@@ -32,8 +33,8 @@ async function postReport(report) {
   }
 }
 
-// 업데이트하면 예전 형식의 캐시 규칙을 버리고 서버에서 새로 받는다
-chrome.runtime.onInstalled.addListener(() => chrome.storage.local.remove('rulesAt'));
+// 업데이트하면 캐시 규칙을 버린다 — 서버가 켜져 있으면 새로 받고, 꺼져 있으면 새 버전에 들어 있는 기본 규칙을 쓰게
+chrome.runtime.onInstalled.addListener(() => chrome.storage.local.remove(['rules', 'rulesAt']));
 
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   const job = msg.type === 'rules' ? getRules(msg.fresh) : msg.type === 'report' ? postReport(msg.report) : null;

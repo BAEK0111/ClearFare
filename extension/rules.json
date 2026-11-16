@@ -1,14 +1,14 @@
 {
-  "_note": "판매처 수수료(fixed 1인당, card_pct 카드 결제 시 수수료율)는 2026-11 공개 자료 조사값, 출처는 source. 실결제 신고로 확인되기 전까지 verified: false. 할인율·좌석은 예시 데이터. 수하물(bag)은 2026-11 기준 사전 구매(온라인) 요금을 공개 자료에서 조사한 값 — source 참고, 바뀌면 여기만 고치면 됨. bag 형식: type kg = 무게제(free_kg 무료 → first_kg를 first 요금에 → 이후 step_kg마다 step 요금), type piece = 개수제(bag_kg 한도 개, free_bags 포함, extra = [2번째, 3번째부터] 요금). 요금은 노선 지역(japan/china/sea)별, 1인·한 구간 기준. 가장 싼 운임(무료 수하물 없음) 기준.",
+  "_note": "판매처 수수료(fixed 1인당, card_pct 카드 결제 시 수수료율, 값이 [최소, 최대]면 조사한 폭 — 화면에 범위로 표시)는 2026-11 공개 자료 조사값, 출처는 source. 실결제 신고로 확인되기 전까지 verified: false. 할인율·좌석은 예시 데이터. 수하물(bag)은 2026-11 기준 사전 구매(온라인) 요금을 공개 자료에서 조사한 값 — source 참고, 바뀌면 여기만 고치면 됨. bag 형식: type kg = 무게제(free_kg 무료 → first_kg를 first 요금에 → 이후 step_kg마다 step 요금), type piece = 개수제(bag_kg 한도 개, free_bags 포함, extra = [2번째, 3번째부터] 요금). 요금은 노선 지역(japan/china/sea)별, 1인·한 구간 기준. 가장 싼 운임(무료 수하물 없음) 기준.",
   "card_pct": 0.015,
   "default_seat": 15000,
   "default_bag": { "type": "kg", "free_kg": 0, "first_kg": 15, "first": { "japan": 40000, "china": 50000, "sea": 60000, "oceania": 90000 }, "step_kg": 5, "step": { "japan": 40000, "china": 50000, "sea": 60000, "oceania": 90000 } },
   "sellers": {
-    "Trip.com": { "pct": 0, "fixed": 0, "card_pct": 0.02, "verified": false, "discount_pct": 0.05, "source": "추가 수수료 없음. 카드 직접 결제 시 해외결제 수수료 USD 약 1~2%, KRW(이중환전) 3~8% — discountspot.co.kr/tripcom/payment-currency, 네이버·카카오페이는 0%. 할인율은 예시" },
+    "Trip.com": { "pct": 0, "fixed": 0, "card_pct": [0.01, 0.02], "verified": false, "discount_pct": 0.05, "source": "추가 수수료 없음. 카드 직접 결제 시 해외결제 수수료 USD 약 1~2%, KRW(이중환전) 3~8% — discountspot.co.kr/tripcom/payment-currency, 네이버·카카오페이는 0%. 할인율은 예시" },
     "마이리얼트립": { "pct": 0, "fixed": 10000, "card_pct": 0, "verified": false, "discount_pct": 0.03, "source": "항공권 발권 수수료 1인 1만원(환불 불가) — discountspot.co.kr/myrealtrip/payment-currency. 할인율은 예시" },
-    "Kiwi.com": { "pct": 0, "fixed": 0, "card_pct": 0.02, "verified": false, "source": "서비스 수수료는 비교 가격에 포함해 표시(kiwi.com). Kiwi Guarantee(운임의 ~25%)는 선택이라 미포함, 해외결제 수수료만 가정" },
-    "Gotogate": { "pct": 0, "fixed": 20000, "card_pct": 0.03, "verified": false, "source": "Etraveli 계열. 결제 단계에서 예약 수수료 1인 $15~35, 카드 결제 수수료 $8~25 추가 사례 — todaytraveling.com/gotogate-reviews, Tripadvisor. 하한($15≈2만원)으로 잡음" },
-    "Mytrip": { "pct": 0, "fixed": 20000, "card_pct": 0.03, "verified": false, "source": "Gotogate와 같은 Etraveli 계열, 같은 수수료 구조로 가정" },
+    "Kiwi.com": { "pct": 0, "fixed": 0, "card_pct": [0.01, 0.02], "verified": false, "source": "서비스 수수료는 비교 가격에 포함해 표시(kiwi.com). Kiwi Guarantee(운임의 ~25%)는 선택이라 미포함, 해외결제 수수료만 가정" },
+    "Gotogate": { "pct": 0, "fixed": [20000, 50000], "card_pct": [0.01, 0.03], "verified": false, "source": "Etraveli 계열. 결제 단계에서 예약 수수료 1인 $15~35, 카드 결제 수수료 $8~25 추가 사례 — todaytraveling.com/gotogate-reviews, Tripadvisor. $15~35 ≈ 2만~5만원 범위, 카드 결제 수수료는 운임 대비 1~3%로 환산" },
+    "Mytrip": { "pct": 0, "fixed": [20000, 50000], "card_pct": [0.01, 0.03], "verified": false, "source": "Gotogate와 같은 Etraveli 계열, 같은 수수료 구조로 가정" },
     "인터파크": { "pct": 0, "fixed": 10000, "card_pct": 0, "verified": false, "source": "국제선 발권대행수수료 1인 1만원(환불 불가) — clien.net/service/board/park/13356704" },
     "하나투어": { "pct": 0, "fixed": 10000, "card_pct": 0, "verified": false, "source": "국제선 발권대행수수료 1인 1만원, 국내 여행사 대부분 동일 — consumernews.co.kr/news/articleView.html?idxno=535180" }
   },
@@ -51,6 +51,8 @@
     "젯스타": {
       "names": ["Jetstar"],
       "seat": 23000,
+      "direct": { "fixed": [8000, 23000], "verified": false },
+      "direct_source": "젯스타 공식 사이트 예약도 Booking and Service Fee 1인·1구간 AUD 8.50~12.50 — jetstar.com/us/en/help/fees-and-charges. 편도 1구간 ≈ 8천원 ~ 왕복 2구간 ≈ 2.3만원",
       "bag": { "type": "kg", "free_kg": 0, "first_kg": 20, "first": { "oceania": 65000 }, "step_kg": 5, "step": { "oceania": 12000 } },
       "source": "Starter(최저) 운임 기준: 국제선 위탁수하물 온라인 최소 20kg 약 AUD 51~70(≈6.5만원), 40kg 약 AUD 104 → 5kg당 약 AUD 13(≈1.2만원) — deeparrival.com/airlines/jetstar/baggage-fees, airlinebaggagepolicy.com/jetstar-baggage-policy. 노선별 차이 미반영(지역 하나 값을 전 노선에 사용). 좌석 23,000원은 실제 예약 화면 확인값. Starter Plus(20kg 포함)·Max(30kg 포함) 번들은 미반영 — 수하물·좌석 필터를 켜면 비슷하게 계산됨"
     },

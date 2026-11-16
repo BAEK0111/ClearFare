@@ -7,7 +7,7 @@ chrome.storage.sync.get(FILTER_DEFAULTS).then((saved) => {
 });
 
 chrome.runtime.sendMessage({ type: 'rules', fresh: true }).then(({ rules, online }) => {
-  if (!online) return ($('status').textContent = '⚠ 서버 연결 안 됨 — backend/server.py 실행 필요');
+  if (!online) return ($('status').textContent = '기본 요금표로 계산 중 · 실결제 신고는 서버가 켜져 있을 때만 돼요');
   const sellers = Object.values(rules.sellers);
   $('status').textContent = `서버 연결됨 · 판매처 ${sellers.length}곳 (검증 ${sellers.filter((s) => s.verified).length}곳)`;
 });

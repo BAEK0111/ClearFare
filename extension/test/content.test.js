@@ -6,7 +6,7 @@ const path = require('node:path');
 const { JSDOM } = require('jsdom');
 
 const src = (f) => fs.readFileSync(path.join(__dirname, '../src', f), 'utf8');
-const rules = require('../../backend/rules.json');
+const rules = require('../rules.json');
 
 function run(html, url, opts = {}) {
   const dom = new JSDOM(`<body>${html}</body>`, { url, runScripts: 'outside-only' });
@@ -25,7 +25,7 @@ test('검색 결과: ₩와 숫자가 쪼개진 가격도 찾고, 카드별로 �
   const card = (airline, price) =>
     `<div class="card"><div><img alt="${airline}"><span>07:00 - 09:30</span></div><div><div><span>₩</span><span>${price}</span></div><button>선택</button></div></div>`;
   const w = run(card('제주항공', '200,000') + card('대한항공', '300,000'), 'https://www.skyscanner.co.kr/transport/flights/icn/nrt/', { bag_out: 15 });
-  assert.deepStrictEqual(badges(w), ['₩240,000 ~ ₩260,000', '₩300,000 ~ ₩320,000']);
+  assert.deepStrictEqual(badges(w), ['₩240,000 ~ ₩290,000', '₩300,000 ~ ₩350,000']);
 });
 
 test('판매처 화면: 순위 역전 표시와 최종가 순 비교표', async () => {
@@ -33,9 +33,9 @@ test('판매처 화면: 순위 역전 표시와 최종가 순 비교표', async 
   const html = `<h2>인천 → 나리타 · 진에어</h2>` + row('Gotogate', '195,000') + row('Trip.com', '200,000') + row('진에어', '210,000');
   const w = run(html, 'https://www.skyscanner.co.kr/transport/flights/icn/nrt/261201/config/123');
   // 박스엔 숫자만, 순위·미검증은 툴팁
-  assert.deepStrictEqual(badges(w), ['₩215,000', '₩200,000', '₩210,000']);
+  assert.deepStrictEqual(badges(w), ['₩215,000 ~ ₩245,000', '₩200,000', '₩210,000']); // Gotogate 예약 수수료 2만~5만
   assert.deepStrictEqual(titles(w).map((t) => t.match(/처음 본 금액 \d위 → 결제할 금액 \d위/)[0]), ['처음 본 금액 1위 → 결제할 금액 3위', '처음 본 금액 2위 → 결제할 금액 1위', '처음 본 금액 3위 → 결제할 금액 2위']);
-  assert.deepStrictEqual(titles(w).map((t) => t.includes('아직 확인 못 한')), [true, true, false]);
+  assert.deepStrictEqual(titles(w).map((t) => t.includes('확인 못 한')), [true, true, false]);
   const cells = [...w.document.querySelectorAll('.clearfare-panel td:first-child')].map((td) => td.firstChild.textContent);
   assert.deepStrictEqual(cells, ['Trip.com*', '진에어', 'Gotogate*']);
   assert.strictEqual(w.document.querySelector('.clearfare-panel .clearfare-best').closest('td').firstChild.textContent, 'Trip.com*');
@@ -51,13 +51,13 @@ test('판매처 화면: 순위 역전 표시와 최종가 순 비교표', async 
 
 test('페이지 필터: 조건을 바꾸면 배지가 다시 계산됨', () => {
   const w = run('<div><img alt="제주항공"><div><span>₩200,000</span></div></div>', 'https://www.skyscanner.co.kr/transport/flights/icn/nrt/');
-  assert.deepStrictEqual(badges(w), ['₩200,000 ~ ₩220,000']);
+  assert.deepStrictEqual(badges(w), ['₩200,000 ~ ₩250,000']);
   const form = w.document.querySelector('.clearfare-filters form');
   form.elements.passengers.value = '2';
   form.elements.bag_out.value = '15';
   form.dispatchEvent(new w.Event('change'));
-  // (200,000 + 수하물 40,000) × 2명 ~ (+ 고정 20,000) × 2명
-  assert.deepStrictEqual(badges(w), ['₩480,000 ~ ₩520,000']);
+  // (200,000 + 수하물 40,000) × 2명 ~ (+ 고정 최대 50,000) × 2명
+  assert.deepStrictEqual(badges(w), ['₩480,000 ~ ₩580,000']);
   assert.match(titles(w)[0], /2명 총액/);
   assert.strictEqual(w.document.querySelectorAll('.clearfare-filters').length, 1);
 });
@@ -85,13 +85,13 @@ test('여러 명 검색: 카드마다 1인 가격 옆 "총 ₩…"이 있어도 
   const cardBadges = [...w.document.querySelectorAll('.card .clearfare-badge')];
   assert.deepStrictEqual(cardBadges.map((b) => b.previousElementSibling.textContent), ['₩200,000', '₩300,000']); // 총액 옆엔 없음
   // 2명 총액, 항공사도 카드에서 찾음: 제주항공 수하물 4만, 대한항공 1개 포함
-  assert.deepStrictEqual(cardBadges.map((b) => b.textContent), ['₩480,000 ~ ₩520,000', '₩600,000 ~ ₩640,000']);
+  assert.deepStrictEqual(cardBadges.map((b) => b.textContent), ['₩480,000 ~ ₩580,000', '₩600,000 ~ ₩700,000']);
 });
 
 test('여러 명 검색: 카드에 총액만 있으면 인원수로 나눠 계산', () => {
   const card = (airline, total) => `<div class="card"><div><img alt="${airline}"></div><div><div><span>총</span> <span>₩${total}</span></div><button>선택</button></div></div>`;
   const w = run(card('제주항공', '400,000') + card('대한항공', '600,000'), 'https://www.skyscanner.co.kr/transport/flights/icn/nrt/?adultsv2=2');
-  assert.deepStrictEqual(badges(w), ['₩400,000 ~ ₩440,000', '₩600,000 ~ ₩640,000']);
+  assert.deepStrictEqual(badges(w), ['₩400,000 ~ ₩500,000', '₩600,000 ~ ₩700,000']);
 });
 
 test('비교표: 접으면 다시 그려도 접힌 상태 유지', async () => {
