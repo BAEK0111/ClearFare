@@ -1,6 +1,6 @@
 // 가격 파싱·최종가 계산·가격 요소 탐색. content.js와 테스트(node)가 같이 쓴다.
 const PRICE_ONLY = /^(?:₩\s*[\d,]+|[\d,]+\s*원)$/;
-const DIRECT = { pct: 0, fixed: 0, verified: true }; // 항공사 공식 사이트 직접 예약
+const DIRECT = { pct: 0, fixed: 0, card_pct: 0, verified: true }; // 국내 항공사 공식 사이트 직접 예약: 원화 결제라 카드 수수료 없음
 
 function parsePrice(text) {
   const m = /₩\s*([\d,]+)|([\d,]+)\s*원/.exec(text);
@@ -8,28 +8,32 @@ function parsePrice(text) {
   return n > 0 ? n : null;
 }
 
-// text 안에 들어 있는 첫 번째 이름 → [이름, 값]
+// text 안에 들어 있는 첫 번째 이름 → [이름, 값]. 값에 names(다른 표기, 예: 영문)가 있으면 그것도 찾는다
 function findName(text, map) {
   const lower = text.toLowerCase();
-  const name = Object.keys(map).find((n) => lower.includes(n.toLowerCase()));
+  const name = Object.keys(map).find((n) => [n, ...(map[n].names ?? [])].some((x) => lower.includes(x.toLowerCase())));
   return name ? [name, map[name]] : null;
 }
 
 // 1인 기준. extras: 수하물·좌석 등 추가 옵션 요금, discount: 판매처 할인율(discount_pct) 적용 여부
+// cardPct: 카드 결제를 켰을 때의 기본 카드 수수료율. 판매처에 card_pct가 있으면 그걸 쓴다 (국내 여행사 0, 해외 판매처는 해외결제 수수료)
 function finalPrice(price, seller, { extras = 0, cardPct = 0, discount = false } = {}) {
   const pct = seller.pct - (discount ? seller.discount_pct ?? 0 : 0);
-  return Math.round((price * (1 + pct) + seller.fixed + extras) * (1 + cardPct));
+  const card = cardPct ? seller.card_pct ?? cardPct : 0;
+  return Math.round((price * (1 + pct) + seller.fixed + extras) * (1 + card));
 }
 
 // 서버 규칙에 수하물 요금이 없을 때(예전 캐시 등) 쓰는 기본값: 일반적인 국내 LCC 사전 구매 요금
 const DEFAULT_BAG = { type: 'kg', free_kg: 0, first_kg: 15, first: { japan: 40000, china: 50000, sea: 60000 }, step_kg: 5, step: { japan: 40000, china: 50000, sea: 60000 } };
 
 // 스카이스캐너 URL의 공항·도시 코드 → 수하물 요금 지역. 목록에 없으면 null (가장 비싼 지역 요금으로 계산)
-// ponytail: 자주 가는 공항만 넣음, 미주·유럽 등 장거리는 지역 추가 필요
+// ponytail: 자주 가는 공항만 넣음, 유럽 등 다른 장거리는 요금 조사 후 지역 추가
 const REGIONS = {
   japan: 'tyo nrt hnd osa kix itm ukb ngo fuk cts spk oka kij hij oit kmj kmi kgs okj tak myj sdj aoj aku fsz ibr toy',
   china: 'bjs pek pkx sha pvg can szx tao hgh xmn dlc tsn wuh cgo kmg ctu cku sya yty ytt wei hkg mfm tpe tsa khh rmq uln ubn',
   sea: 'bkk dmk hkt cnx sgn han dad cxr pqc dli mnl ceb crk sin kul bki pen dps cgk vte rep pnh',
+  oceania: 'syd mel bne per adl ool cns akl chc zqn',
+  americas: 'lax sfo sea las hnl nyc jfk ewr chi ord was iad atl dfw bos yvr yto yyz',
 };
 function regionOf(pathname) {
   const m = /\/flights\/([a-z]+)\/([a-z]+)/i.exec(pathname);
@@ -39,6 +43,13 @@ function regionOf(pathname) {
     if (region) return region;
   }
   return null;
+}
+
+// 검색 인원: URL의 adultsv2 + childrenv2(아이 나이를 |로 구분), 없으면 화면의 "여행자 2명" 글자. 필터 선택지(1~9) 안으로
+function passengersOf(search, text) {
+  const q = new URLSearchParams(search);
+  const n = q.has('adultsv2') ? +q.get('adultsv2') + (q.get('childrenv2') || '').split('|').filter(Boolean).length : +(/\d+/.exec(text || '') || [])[0];
+  return n > 0 ? Math.min(9, n) : null;
 }
 
 // 지역별 요금 중 해당 지역 값, 없으면 가장 비싼 지역 값 (모를 땐 적게 잡지 않게)
@@ -73,6 +84,7 @@ function baggageFee(kg, bag, region) {
 
 // ctx: 가격 주변 텍스트, opts: 예매 조건 필터(filters.js)
 // page.sellerPage: 판매처 선택 화면인지, page.airlineHint: 주변에 항공사가 없을 때 찾아볼 텍스트(페이지 전체), page.region: regionOf()
+// page.premium: 비즈니스·일등석 검색 — 위탁수하물·좌석 지정이 운임에 포함이라 추가 요금 없음
 // ponytail: 수수료·옵션 요금을 모두 1인당으로 계산, 예약 건당 고정 수수료가 확인되면 분리
 function estimate(price, ctx, rules, opts, page = {}) {
   const ctxAirline = findName(ctx, rules.airlines);
@@ -80,11 +92,11 @@ function estimate(price, ctx, rules, opts, page = {}) {
   const air = airline?.[1] ?? {};
   const bag = air.bag ?? rules.default_bag ?? DEFAULT_BAG;
   const calc = {
-    extras: baggageFee(opts.bag_out, bag, page.region) + baggageFee(opts.bag_back, bag, page.region) + (opts.seat ? air.seat ?? rules.default_seat ?? 0 : 0),
+    extras: page.premium ? 0 : baggageFee(opts.bag_out, bag, page.region) + baggageFee(opts.bag_back, bag, page.region) + (opts.seat ? air.seat ?? rules.default_seat ?? 0 : 0),
     cardPct: opts.card ? rules.card_pct ?? 0 : 0,
     discount: !!opts.discount,
   };
-  const n = opts.display === 'total' ? opts.passengers || 1 : 1;
+  const n = opts.passengers || 1; // 항상 인원 총액으로 보여 준다 (1인 가격 × 인원은 사람이 계산하기 번거로움)
   const seller = findName(ctx, rules.sellers) ?? (page.sellerPage && ctxAirline ? [ctxAirline[0], DIRECT] : null);
   if (seller) {
     return { kind: 'seller', seller: seller[0], verified: !!seller[1].verified, shown: price * n, total: finalPrice(price, seller[1], calc) * n };
@@ -116,11 +128,12 @@ function findPriceElements(root) {
 }
 
 // 가격 하나만 포함하는 가장 큰 조상 = 그 가격의 카드/행. 다른 가격 요소는 미리 data-cf-price로 표시돼 있어야 한다.
+// 건너뛴 총액 가격(data-cf-skip)은 세지 않는다 — 1인 가격 옆 "총 ₩…" 때문에 카드가 잘려 항공사 이름을 놓치지 않게
 // ponytail: 카드 안에 가격이 2개(1인/총액)면 카드 전체를 못 잡음, 실제 DOM 보고 조정
 function contextOf(el, maxUp = 8) {
   let ctx = el;
   for (let p = el.parentElement, i = 0; p && i < maxUp; p = p.parentElement, i++) {
-    if (p.querySelectorAll('[data-cf-price]').length > 1) break;
+    if (p.querySelectorAll('[data-cf-price]:not([data-cf-skip])').length > 1) break;
     ctx = p;
   }
   return ctx;
@@ -131,4 +144,4 @@ function textOf(el) {
   return el.textContent + ' ' + [...el.querySelectorAll('img[alt]')].map((i) => i.alt).join(' ');
 }
 
-if (typeof module !== 'undefined') module.exports = { parsePrice, findName, finalPrice, regionOf, baggageFee, estimate, ranks, findPriceElements, contextOf, textOf };
+if (typeof module !== 'undefined') module.exports = { parsePrice, findName, finalPrice, regionOf, passengersOf, baggageFee, estimate, ranks, findPriceElements, contextOf, textOf };

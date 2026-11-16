@@ -35,7 +35,8 @@ def load_rules(db):
     # 수하물을 뺀 신고만 사용, 카드 수수료는 나눠서 제거
     markups = defaultdict(list)
     for seller, displayed, final, card in db.execute("select seller, displayed, final, card from reports where baggage = 0"):
-        markups[seller].append(final / (1 + rules["card_pct"] * card) / displayed - 1)
+        card_pct = rules["sellers"].get(seller, {}).get("card_pct", rules["card_pct"])
+        markups[seller].append(final / (1 + card_pct * card) / displayed - 1)
     for seller, ms in markups.items():
         if len(ms) >= MIN_SAMPLES:
             rules["sellers"][seller] = {**rules["sellers"].get(seller, {}), "pct": round(statistics.median(ms), 4), "fixed": 0, "verified": True, "samples": len(ms)}

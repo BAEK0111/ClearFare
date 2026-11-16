@@ -1,9 +1,8 @@
 // 최종가에 영향을 주는 예매 조건 필터. 스카이스캐너 페이지 위 패널과 팝업이 같이 쓴다.
-const FILTER_DEFAULTS = { passengers: 1, display: 'person', bag_out: 0, bag_back: 0, seat: false, card: false, discount: false };
+const FILTER_DEFAULTS = { passengers: 1, bag_out: 0, bag_back: 0, seat: false, card: false, discount: false };
 
 const FILTER_FIELDS = [
   { name: 'passengers', label: '인원', options: [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => [n, `${n}명`]) },
-  { name: 'display', label: '가격 표시', options: [['person', '1인 기준'], ['total', '인원 총액']] },
   { name: 'bag_out', label: '위탁수하물 · 가는 편', unit: 'kg', hint: '무게만 적어 주세요. 몇 개 필요한지는 저희가 셀게요' },
   { name: 'bag_back', label: '위탁수하물 · 오는 편', unit: 'kg', hint: '왕복이면 여기도요! 편도면 0' },
   { name: 'seat', label: '좌석 지정' },

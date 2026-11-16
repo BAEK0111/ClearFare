@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { parsePrice, finalPrice, regionOf, baggageFee, estimate, ranks } = require('../src/core.js');
+const { parsePrice, finalPrice, regionOf, passengersOf, baggageFee, estimate, ranks } = require('../src/core.js');
 const rules = require('../../backend/rules.json');
 
 const NONE = { bag_out: 0, bag_back: 0, card: false };
@@ -28,11 +28,18 @@ test('estimate: 좌석 지정, 인원 총액 필터', () => {
   assert.strictEqual(estimate(100000, '제주항공', rules, { seat: true }).min, 100000 + jeju.seat);
   assert.strictEqual(estimate(100000, '제주항공', rules, { bag_out: 15, seat: true }, JP).min, 100000 + 40000 + jeju.seat);
   assert.strictEqual(estimate(100000, '', rules, { seat: true }).min, 100000 + rules.default_seat);
-  // 총액은 인원수만큼, 1인 기준이면 인원수 무시
-  assert.deepStrictEqual(estimate(100000, '', rules, { passengers: 3, display: 'total' }), { kind: 'range', min: 300000, max: 345000, airline: null });
-  assert.strictEqual(estimate(100000, '', rules, { passengers: 3, display: 'person' }).min, 100000);
-  const seller = estimate(100000, 'Trip.com', rules, { passengers: 2, display: 'total' }, { sellerPage: true });
-  assert.deepStrictEqual([seller.shown, seller.total], [200000, 206000]);
+  // 항상 인원 총액
+  assert.deepStrictEqual(estimate(100000, '', rules, { passengers: 3 }), { kind: 'range', min: 300000, max: 360000, airline: null });
+  const seller = estimate(100000, 'Trip.com', rules, { passengers: 2 }, { sellerPage: true });
+  assert.deepStrictEqual([seller.shown, seller.total], [200000, 200000]);
+});
+
+test('passengersOf: URL 인원 우선, 없으면 화면 글자', () => {
+  assert.strictEqual(passengersOf('?adultsv2=2&cabinclass=economy&childrenv2=', '여행자 5명'), 2);
+  assert.strictEqual(passengersOf('?adultsv2=1&childrenv2=5|8'), 3);
+  assert.strictEqual(passengersOf('', '여행자 2명, 일반석'), 2);
+  assert.strictEqual(passengersOf('?adultsv2=8&childrenv2=3|5'), 9);
+  assert.strictEqual(passengersOf('', undefined), null);
 });
 
 test('regionOf: 스카이스캐너 URL 공항·도시 코드 → 지역', () => {
@@ -40,7 +47,9 @@ test('regionOf: 스카이스캐너 URL 공항·도시 코드 → 지역', () => 
   assert.strictEqual(regionOf('/transport/flights/sela/tyoa/261201/261208/'), 'japan'); // 도시 코드
   assert.strictEqual(regionOf('/transport/flights/icn/bkk/261201/config/123'), 'sea');
   assert.strictEqual(regionOf('/transport/flights/tpe/icn/'), 'china'); // 출발지가 해외여도
-  assert.strictEqual(regionOf('/transport/flights/icn/jfk/'), null);
+  assert.strictEqual(regionOf('/transport/flights/sela/syda/261202/261210/itinerary/abc'), 'oceania');
+  assert.strictEqual(regionOf('/transport/flights/icn/jfk/'), 'americas');
+  assert.strictEqual(regionOf('/transport/flights/icn/cdg/'), null);
   assert.strictEqual(regionOf('/'), null);
 });
 
@@ -69,8 +78,11 @@ test('baggageFee: 개수제(대형항공사)', () => {
   assert.strictEqual(baggageFee(69, bag('대한항공'), 'japan'), 170000);
   assert.strictEqual(baggageFee(92, bag('대한항공'), 'japan'), 270000);
   assert.strictEqual(baggageFee(30, bag('대한항공'), 'sea'), 100000);
-  // 아시아나 동남아 요금은 없음 → 가장 비싼 지역
-  assert.strictEqual(baggageFee(30, bag('아시아나'), 'sea'), 80000);
+  assert.strictEqual(baggageFee(30, bag('아시아나'), 'sea'), 99000);
+  // 미주는 2개 포함이라 2번째 무료, 3번째부터 요금
+  assert.strictEqual(baggageFee(46, bag('대한항공'), 'americas'), 0);
+  assert.strictEqual(baggageFee(69, bag('대한항공'), 'americas'), 200000);
+  assert.strictEqual(baggageFee(30, bag('대한항공'), 'oceania'), 130000);
 });
 
 test('estimate: 왕복 수하물, 예전 형식 규칙에서도 NaN 안 남', () => {
@@ -86,7 +98,7 @@ test('estimate: 왕복 수하물, 예전 형식 규칙에서도 NaN 안 남', ()
 
 test('estimate: 검색 결과 목록은 판매처 전체 기준 범위', () => {
   const est = estimate(100000, '제주항공 07:00 → 09:30 직항', rules, NONE);
-  assert.deepStrictEqual([est.kind, est.min, est.max], ['range', 100000, 115000]); // 직접예약 ~ 고정 15,000원
+  assert.deepStrictEqual([est.kind, est.min, est.max], ['range', 100000, 120000]); // 직접예약 ~ 고정 20,000원
   const withBag = estimate(100000, '제주항공 직항', rules, { bag_out: 15, card: false }, JP);
   assert.strictEqual(withBag.min, 100000 + 40000);
   // 대형항공사는 1개 포함
@@ -96,12 +108,18 @@ test('estimate: 검색 결과 목록은 판매처 전체 기준 범위', () => {
 test('estimate: 판매처 화면은 판매처별 최종가, 항공사는 페이지에서 찾음', () => {
   const page = { sellerPage: true, airlineHint: '인천 → 나리타 티웨이항공 TW211', region: 'japan' };
   const est = estimate(100000, 'Trip.com 선택', rules, { bag_out: 15, card: false }, page);
-  assert.deepStrictEqual(est, { kind: 'seller', seller: 'Trip.com', verified: false, shown: 100000, total: 103000 + 40000 });
+  assert.deepStrictEqual(est, { kind: 'seller', seller: 'Trip.com', verified: false, shown: 100000, total: 100000 + 40000 });
   // 항공사 공식 사이트 행은 수수료 0, 검증됨
   const direct = estimate(100000, '티웨이항공 선택', rules, NONE, page);
   assert.deepStrictEqual([direct.seller, direct.total, direct.verified], ['티웨이', 100000, true]);
   // 모르는 판매처는 범위로
   assert.strictEqual(estimate(100000, '모르는여행사', rules, NONE, page).kind, 'range');
+});
+
+test('finalPrice: 판매처별 카드 수수료(card_pct)가 기본값보다 우선', () => {
+  assert.strictEqual(finalPrice(100000, rules.sellers['인터파크'], { cardPct: 0.015 }), 110000); // 국내 여행사 카드 수수료 0
+  assert.strictEqual(finalPrice(100000, rules.sellers['Gotogate'], { cardPct: 0.015 }), Math.round(120000 * 1.03));
+  assert.strictEqual(finalPrice(100000, rules.sellers['Gotogate'], { cardPct: 0 }), 120000); // 카드 결제 꺼짐
 });
 
 test('ranks: 표시가 순위와 최종가 순위가 뒤집힘', () => {
@@ -110,4 +128,11 @@ test('ranks: 표시가 순위와 최종가 순위가 뒤집힘', () => {
   const gotogate = rules.sellers['Gotogate'];
   assert.deepStrictEqual(ranks([200000, 195000]), [2, 1]);
   assert.deepStrictEqual(ranks([finalPrice(200000, trip), finalPrice(195000, gotogate)]), [1, 2]);
+});
+
+test('estimate: 해외 항공사 영문 표기, 비즈니스 검색은 수하물·좌석 추가 없음', () => {
+  // 젯스타: 20kg 6.5만 + 5kg 1.2만, 좌석 2.3만
+  const est = estimate(1000000, 'Jetstar Airways', rules, { bag_out: 25, seat: true }, { region: 'oceania' });
+  assert.deepStrictEqual([est.airline, est.min], ['젯스타', 1000000 + 65000 + 12000 + 23000]);
+  assert.strictEqual(estimate(1000000, '대한항공', rules, { bag_out: 50, seat: true }, { region: 'oceania', premium: true }).min, 1000000);
 });

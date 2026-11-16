@@ -1,27 +1,27 @@
 {
-  "_note": "판매처 수수료·할인·좌석은 예시 데이터(verified: false). 수하물(bag)은 2026-11 기준 사전 구매(온라인) 요금을 공개 자료에서 조사한 값 — source 참고, 바뀌면 여기만 고치면 됨. bag 형식: type kg = 무게제(free_kg 무료 → first_kg를 first 요금에 → 이후 step_kg마다 step 요금), type piece = 개수제(bag_kg 한도 개, free_bags 포함, extra = [2번째, 3번째부터] 요금). 요금은 노선 지역(japan/china/sea)별, 1인·한 구간 기준. 가장 싼 운임(무료 수하물 없음) 기준.",
+  "_note": "판매처 수수료(fixed 1인당, card_pct 카드 결제 시 수수료율)는 2026-11 공개 자료 조사값, 출처는 source. 실결제 신고로 확인되기 전까지 verified: false. 할인율·좌석은 예시 데이터. 수하물(bag)은 2026-11 기준 사전 구매(온라인) 요금을 공개 자료에서 조사한 값 — source 참고, 바뀌면 여기만 고치면 됨. bag 형식: type kg = 무게제(free_kg 무료 → first_kg를 first 요금에 → 이후 step_kg마다 step 요금), type piece = 개수제(bag_kg 한도 개, free_bags 포함, extra = [2번째, 3번째부터] 요금). 요금은 노선 지역(japan/china/sea)별, 1인·한 구간 기준. 가장 싼 운임(무료 수하물 없음) 기준.",
   "card_pct": 0.015,
   "default_seat": 15000,
-  "default_bag": { "type": "kg", "free_kg": 0, "first_kg": 15, "first": { "japan": 40000, "china": 50000, "sea": 60000 }, "step_kg": 5, "step": { "japan": 40000, "china": 50000, "sea": 60000 } },
+  "default_bag": { "type": "kg", "free_kg": 0, "first_kg": 15, "first": { "japan": 40000, "china": 50000, "sea": 60000, "oceania": 90000 }, "step_kg": 5, "step": { "japan": 40000, "china": 50000, "sea": 60000, "oceania": 90000 } },
   "sellers": {
-    "Trip.com": { "pct": 0.03, "fixed": 0, "verified": false, "discount_pct": 0.05 },
-    "마이리얼트립": { "pct": 0, "fixed": 5000, "verified": false, "discount_pct": 0.03 },
-    "Kiwi.com": { "pct": 0.05, "fixed": 0, "verified": false },
-    "Gotogate": { "pct": 0, "fixed": 15000, "verified": false },
-    "Mytrip": { "pct": 0, "fixed": 15000, "verified": false },
-    "인터파크": { "pct": 0, "fixed": 3000, "verified": false },
-    "하나투어": { "pct": 0, "fixed": 3000, "verified": false }
+    "Trip.com": { "pct": 0, "fixed": 0, "card_pct": 0.02, "verified": false, "discount_pct": 0.05, "source": "추가 수수료 없음. 카드 직접 결제 시 해외결제 수수료 USD 약 1~2%, KRW(이중환전) 3~8% — discountspot.co.kr/tripcom/payment-currency, 네이버·카카오페이는 0%. 할인율은 예시" },
+    "마이리얼트립": { "pct": 0, "fixed": 10000, "card_pct": 0, "verified": false, "discount_pct": 0.03, "source": "항공권 발권 수수료 1인 1만원(환불 불가) — discountspot.co.kr/myrealtrip/payment-currency. 할인율은 예시" },
+    "Kiwi.com": { "pct": 0, "fixed": 0, "card_pct": 0.02, "verified": false, "source": "서비스 수수료는 비교 가격에 포함해 표시(kiwi.com). Kiwi Guarantee(운임의 ~25%)는 선택이라 미포함, 해외결제 수수료만 가정" },
+    "Gotogate": { "pct": 0, "fixed": 20000, "card_pct": 0.03, "verified": false, "source": "Etraveli 계열. 결제 단계에서 예약 수수료 1인 $15~35, 카드 결제 수수료 $8~25 추가 사례 — todaytraveling.com/gotogate-reviews, Tripadvisor. 하한($15≈2만원)으로 잡음" },
+    "Mytrip": { "pct": 0, "fixed": 20000, "card_pct": 0.03, "verified": false, "source": "Gotogate와 같은 Etraveli 계열, 같은 수수료 구조로 가정" },
+    "인터파크": { "pct": 0, "fixed": 10000, "card_pct": 0, "verified": false, "source": "국제선 발권대행수수료 1인 1만원(환불 불가) — clien.net/service/board/park/13356704" },
+    "하나투어": { "pct": 0, "fixed": 10000, "card_pct": 0, "verified": false, "source": "국제선 발권대행수수료 1인 1만원, 국내 여행사 대부분 동일 — consumernews.co.kr/news/articleView.html?idxno=535180" }
   },
   "airlines": {
     "대한항공": {
       "seat": 0,
-      "bag": { "type": "piece", "bag_kg": 23, "free_bags": 1, "extra": { "japan": [70000, 100000], "china": [70000, 100000], "sea": [100000, 150000] } },
-      "source": "kr.trip.com 대한항공 수하물 가이드 (일본·중국 2번째 7만/3번째부터 10만, 동남아 10만/15만)"
+      "bag": { "type": "piece", "bag_kg": 23, "free_bags": 1, "extra": { "japan": [70000, 100000], "china": [70000, 100000], "sea": [100000, 150000], "oceania": [130000, 200000], "americas": [0, 200000] } },
+      "source": "kr.trip.com 대한항공 수하물 가이드 (일본·중국 2번째 7만/3번째부터 10만, 동남아 10만/15만). 미주는 2개 무료라 2번째 0·3번째부터 20만, 대양주 2번째 13만(3번째는 미주와 같다고 가정) — nomadlee.com 대한항공 추가수하물 규정"
     },
     "아시아나": {
       "seat": 0,
-      "bag": { "type": "piece", "bag_kg": 23, "free_bags": 1, "extra": { "japan": [80000, 110000], "china": [80000, 110000] } },
-      "source": "kr.trip.com 아시아나 수하물 가이드 (일본·중국 2번째 8만/3번째부터 11만, 동남아는 미확인 → 가장 비싼 지역 값 사용)"
+      "bag": { "type": "piece", "bag_kg": 23, "free_bags": 1, "extra": { "japan": [80000, 110000], "china": [80000, 110000], "sea": [99000, 99000], "oceania": [210000, 210000], "americas": [0, 180000] } },
+      "source": "kr.trip.com 아시아나 수하물 가이드 (일본·중국 2번째 8만/3번째부터 11만). 동남아 2번째 공항 11만, 사전구매 10% 할인 → 9.9만, 3번째는 미확인 → 같다고 가정 — flyasiana.com 초과 수하물·수하물 사전 구매. 미주 2개 무료·초과 1개 사전구매 18만, 대양주 2번째부터 21만 — flyasiana.com 초과 수하물"
     },
     "제주항공": {
       "seat": 15000,
@@ -35,8 +35,8 @@
     },
     "티웨이": {
       "seat": 15000,
-      "bag": { "type": "kg", "free_kg": 0, "first_kg": 15, "first": { "japan": 40000, "china": 50000, "sea": 60000 }, "step_kg": 5, "step": { "japan": 40000, "china": 50000, "sea": 60000 } },
-      "source": "머니투데이 2026-03-24 (이벤트 운임 최초 15kg 사전구매: 일본 4만, 대만·홍콩 5만, 동남아 6만). 추가 5kg 요금은 미확인 → 최초 15kg 요금과 같다고 가정"
+      "bag": { "type": "kg", "free_kg": 0, "first_kg": 15, "first": { "japan": 40000, "china": 50000, "sea": 60000, "oceania": 90000 }, "step_kg": 5, "step": { "japan": 40000, "china": 50000, "sea": 60000, "oceania": 90000 } },
+      "source": "머니투데이 2026-03-24 (이벤트 운임 최초 15kg 사전구매: 일본 4만, 대만·홍콩 5만, 동남아 6만, 호주 추가 5kg·1개 8만→9만). 추가 5kg 요금과 호주 최초 15kg은 미확인 → 같다고 가정. 호주 일반·스마트 운임은 2026-10-25부터 23kg 무료"
     },
     "에어부산": {
       "seat": 15000,
@@ -47,6 +47,12 @@
       "seat": 15000,
       "bag": { "type": "kg", "free_kg": 0, "first_kg": 15, "first": { "japan": 40000, "china": 50000, "sea": 60000 }, "step_kg": 5, "step": { "japan": 35000, "china": 45000, "sea": 55000 } },
       "source": "airtravelinfo.kr 에어서울 수하물 (최초 15kg 일본 4만·중국 5만·동남아 6만, 추가 5kg 3.5만·4.5만·5.5만)"
+    },
+    "젯스타": {
+      "names": ["Jetstar"],
+      "seat": 23000,
+      "bag": { "type": "kg", "free_kg": 0, "first_kg": 20, "first": { "oceania": 65000 }, "step_kg": 5, "step": { "oceania": 12000 } },
+      "source": "Starter(최저) 운임 기준: 국제선 위탁수하물 온라인 최소 20kg 약 AUD 51~70(≈6.5만원), 40kg 약 AUD 104 → 5kg당 약 AUD 13(≈1.2만원) — deeparrival.com/airlines/jetstar/baggage-fees, airlinebaggagepolicy.com/jetstar-baggage-policy. 노선별 차이 미반영(지역 하나 값을 전 노선에 사용). 좌석 23,000원은 실제 예약 화면 확인값. Starter Plus(20kg 포함)·Max(30kg 포함) 번들은 미반영 — 수하물·좌석 필터를 켜면 비슷하게 계산됨"
     },
     "이스타항공": {
       "seat": 15000,
